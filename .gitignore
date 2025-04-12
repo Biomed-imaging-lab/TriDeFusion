@@ -1,0 +1,14 @@
+__pycache__/
+.vscode/
+*.py[cod]
+*$py.class
+.env
+.vscode
+*.tiff
+*.tif
+*.pth
+*.pt
+
+
+dataset/
+experiments/

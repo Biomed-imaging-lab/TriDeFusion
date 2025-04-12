@@ -1,0 +1,12 @@
+exp_name: "n2n"
+exp_dir: "./results"
+noisy_img: "./test_images/noisy_tubes.tif"
+gt_img: "./test_images/gt_tubes.tif"
+denoise_method: "gaussian"
+model_path: "./experiments/n2n/models/best_model.pth"
+output: "./test_images/denoised_tubes.tif"
+output_dir: "./results"
+cuda: 0
+debug: true
+denoise_params:
+  gaussian_sigma: 5
