@@ -1,63 +1,55 @@
 # TriDeFusion: Denoising method for fluorescence microscopy
-<!-- 
-![GitHub language count](https://img.shields.io/github/languages/top/Biomed-imaging-lab/SpineTool?style=for-the-badge)
-[![GNU License](https://img.shields.io/github/license/Biomed-imaging-lab/SpineTool.svg?style=for-the-badge)](LICENSE)
-[![Language](https://img.shields.io/badge/python_version-_3.12-green?style=for-the-badge)]()
-[![Language](https://img.shields.io/badge/Anaconda-%E2%89%A5_2022.10-green?style=for-the-badge)]()
-[![Issues](https://img.shields.io/github/issues/Biomed-imaging-lab/SpineTool?style=for-the-badge)](https://github.com/Biomed-imaging-lab/SpineTool/issues) -->
 
-![GitHub repo size](https://img.shields.io/github/repo-size/Biomed-imaging-lab/TriDeFusion)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Biomed-imaging-lab/TriDeFusion)
-![Python version](https://img.shields.io/badge/python-v3.12-blue)
-![GitHub](https://img.shields.io/github/license/Biomed-imaging-lab/TriDeFusion)
-
+<img src="https://img.shields.io/github/repo-size/Biomed-imaging-lab/TriDeFusion" alt="repo-size">
+<img src="https://img.shields.io/github/v/release/Biomed-imaging-lab/TriDeFusion" alt="release">
+<img src="https://img.shields.io/github/license/Biomed-imaging-lab/TriDeFusion?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
+<img src="https://img.shields.io/github/last-commit/Biomed-imaging-lab/TriDeFusion?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+<img src="https://img.shields.io/github/issues/Biomed-imaging-lab/TriDeFusion" alt="issues">
+<a href="https://huggingface.co/TriDeFusion" target="_blank" style="margin: 2px;">
+    <img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-TriDeFusion-ffc107?color=ffc107&logoColor=white"/>
+</a>
 
 <br />
 <div align="center">
   <a href="https://github.com/Biomed-imaging-lab/TriDeFusion">
-    <img src="figures/logo.jpeg" alt="TriDeFusion" width="60%" style="display:block;line-height:0; vertical-align: middle;font-size:0px">
+    <img src="figures/logo.jpeg" alt="TriDeFusion" width="30%" style="display:block;line-height:0; vertical-align: middle;font-size:0px">
   </a>
-
   <h2 align="center">TriDeFusion</h2>
 
   _Tri - three-dimensional images , De - denoising task, Fusion - integration of multiple techniques._
-
+  \
   Dendritic spine analysis tool for dendritic spine image segmentation, dendritic spine morphologies extraction, analysis and clustering.
-
-  <div align="center" style="line-height: 1;">
-  <a href="https://www.deepseek.com/" target="_blank" style="margin: 2px;">
-    <img alt="Homepage" src="https://github.com/deepseek-ai/DeepSeek-V2/blob/main/figures/badge.svg?raw=true" style="display: inline-block; vertical-align: middle;"/>
-  </a>
-  <a href="https://chat.deepseek.com/" target="_blank" style="margin: 2px;">
-    <img alt="Chat" src="https://img.shields.io/badge/🤖%20Chat-DeepSeek%20R1-536af5?color=536af5&logoColor=white" style="display: inline-block; vertical-align: middle;"/>
-  </a>
-  <a href="https://huggingface.co/TriDeFusion" target="_blank" style="margin: 2px;">
-    <img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-TriDeFusion-ffc107?color=ffc107&logoColor=white" style="display: inline-block; vertical-align: middle;"/>
-  </a>
-</div>
-
-  <img alt="License" src="https://img.shields.io/badge/License-GPL-green" style="display: inline-block; vertical-align: middle;"/>
+<p align="center">
+	<a href="https://doi.org/10.1109/SIBIRCON63777.2024.10758532"><strong> Explore the research paper »</strong></a>
+	<br />
+	<a href="#Citation">Cite</a>
+	·
+	<a href="https://github.com/IMZolin/frt-web">FRT web service</a>
+	·
+	<a href="https://github.com/gerasimenkoab/simple_psf_extractor">FRT Desktop GitHub</a>
+	·
+	<a href="mailto:zolin.work@yandex.ru&subject=TriDeFusion feedback">Connect</a>
+</p>
 
 
-  <p align="center">
-    <br />
-    <a href="https://doi.org/10.1109/SIBIRCON63777.2024.10758532"><strong> Explore the research paper »</strong></a>
-    <br />
-    <a href="#Citation">Cite</a>
-    ·
-    <a href="https://github.com/IMZolin/frt-web">FRT web service</a>
-    ·
-    <a href="https://github.com/gerasimenkoab/simple_psf_extractor">FRT Desktop GitHub</a>
-    ·
-    <a href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41598-023-37406-4/MediaObjects/41598_2023_37406_MOESM1_ESM.pdf">Read FRT Tutorial</a>
-    ·
-    <a href="mailto:zolin.work@yandex.ru&subject=TriDeFusion_feedback">Connect</a>
-  </p>
+<p align="center">
+	<a href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/Biomed-imaging-lab/TriDeFusion">
+		<img src="https://img.shields.io/badge/Facebook-%231877F2.svg?logo=Facebook&logoColor=white">
+	</a>
+	<a href="https://www.reddit.com/submit?title=Check%20out%20this%20project%20on%20GitHub:%20https://github.com/Biomed-imaging-lab/TriDeFusion">
+		<img src="https://img.shields.io/badge/Reddit-FF4500?logo=reddit&logoColor=white">
+	</a>
+	<a href="https://www.linkedin.com/shareArticle?url=https://github.com/Biomed-imaging-lab/TriDeFusion&title=NeuroRAG&summary=A Biomedical AI Project&source=GitHub">
+		<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
+	</a>
+	<a href="https://t.me/share/url?url=https://github.com/Biomed-imaging-lab/TriDeFusion&text=Check out TriDeFusion: A Biomedical AI Project">
+		<img src="https://img.shields.io/badge/Telegram-2CA5E0?logo=telegram&logoColor=white">
+	</a>
+	<a href="https://twitter.com/intent/tweet?text=Check out TriDeFusion: A Biomedical AI Project&url=https://github.com/Biomed-imaging-lab/TriDeFusion">
+		<img src="https://img.shields.io/badge/X-%23000000.svg?logo=X&logoColor=white">
+	</a>
+</p>
 
-[![Share](https://img.shields.io/badge/share-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/Biomed-imaging-lab/TriDeFusion)
-[![Share](https://img.shields.io/badge/share-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/shareArticle?mini=true&url=https://github.com/Biomed-imaging-lab/TriDeFusion)
-[![Share](https://img.shields.io/badge/share-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/submit?title=Check%20out%20this%20project%20on%20GitHub:%20https://github.com/Biomed-imaging-lab/TriDeFusion)
-[![Share](https://img.shields.io/badge/share-0088CC?logo=telegram&logoColor=white)](https://t.me/share/url?url=https://github.com/Biomed-imaging-lab/TriDeFusion&text=Check%20out%20this%20project%20on%20GitHub)
 </div>
 
 [Ivan, Z., Vyacheslav, C., Ekaterina, P. (2024). TriDeFusion: Enhanced denoising algorithm for 3D fluorescence microscopy images integrating modified Noise2Noise and Non-local means. IEEE International Multi-Conference on Engineering, Computer and Information Sciences (SIBIRCON). 
@@ -65,12 +57,16 @@
 
 <div align="center" style="display: flex; justify-content: center; align-items: center; max-width:100%">
   <figure style="display: inline-block; margin: 0 10px;">
-    <img src="figures/result_dsred.gif" alt="Description of image" width="40%">
+    <img src="figures/gif/result_dsred.gif" alt="Description of image" width="50%">
     <figcaption>Figure 1: Results of TriDeFusion</figcaption>
   </figure>
   <figure style="display: inline-block; margin: 0 10px;">
-    <img src="figures/result_dsred.gif" alt="Description of image" width="40%">
+    <img src="figures/gif/result_ip3r.gif" alt="Description of image" width="50%">
     <figcaption>Figure 2: Results of TriDeFusion</figcaption>
+  </figure>
+  <figure style="display: inline-block; margin: 0 10px;">
+    <img src="figures/gif/result_neuron.gif" alt="Description of image" width="50%">
+    <figcaption>Figure 3: Results of TriDeFusion</figcaption>
   </figure>
 </div>
 
@@ -81,39 +77,10 @@ _Fluorescence microscopy is a technique for obtaining images of luminous objects
 
 <div align="center">
 <figure>
-  <img src="figures/frt_service.png" alt="Description of image">
-  <figcaption>Figure 1: Denoising method</figcaption>
-</figure>
-
-<figure>
-  <img src="figures/frt_service.png" alt="Description of image">
-  <figcaption>Figure 2: This is a beautiful caption below the image.</figcaption>
+  <img src="figures/assets/frt_service.png" alt="Description of image">
+  <figcaption>Figure: Denoising method</figcaption>
 </figure>
 </div>
-
-<!-- <div align="center">
-  <img src="https://github.com/deepseek-ai/DeepSeek-V2/blob/main/figures/logo.svg?raw=true" width="60%" alt="DeepSeek-V3" />
-</div>
-<hr>
-<div align="center" style="line-height: 1;">
-  <a href="https://www.deepseek.com/" target="_blank" style="margin: 2px;">
-    <img alt="Homepage" src="https://github.com/deepseek-ai/DeepSeek-V2/blob/main/figures/badge.svg?raw=true" style="display: inline-block; vertical-align: middle;"/>
-  </a>
-  <a href="https://chat.deepseek.com/" target="_blank" style="margin: 2px;">
-    <img alt="Chat" src="https://img.shields.io/badge/🤖%20Chat-DeepSeek%20R1-536af5?color=536af5&logoColor=white" style="display: inline-block; vertical-align: middle;"/>
-  </a>
-  <a href="https://huggingface.co/deepseek-ai" target="_blank" style="margin: 2px;">
-    <img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-DeepSeek%20AI-ffc107?color=ffc107&logoColor=white" style="display: inline-block; vertical-align: middle;"/>
-  </a>
-</div>
-
-[![Share](https://img.shields.io/badge/share-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/Biomed-imaging-lab/SpineTool)
-[![Share](https://img.shields.io/badge/share-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/shareArticle?mini=true&url=https://github.com/Biomed-imaging-lab/SpineTool)
-[![Share](https://img.shields.io/badge/share-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/submit?title=Check%20out%20this%20project%20on%20GitHub:%20https://github.com/Biomed-imaging-lab/SpineTool)
-[![Share](https://img.shields.io/badge/share-0088CC?logo=telegram&logoColor=white)](https://t.me/share/url?url=https://github.com/Biomed-imaging-lab/SpineTool&text=Check%20out%20this%20project%20on%20GitHub)
-
-</div> -->
-
 
 ## System requirements
 
@@ -445,7 +412,7 @@ pip install -r requirements.txt
 There are two ways to train the model. First you can train the model using the following command line arguments. Second you can use a config file (`train_config.yml`). The third way is to use a jupyter notebook ([`netrwok_trainer.ipynb`](notebooks/netrwok_trainer.ipynb)).
 
 
-1. Using a command line.
+- Using a command line.
 
     ```bash
     python train.py \
@@ -468,7 +435,7 @@ There are two ways to train the model. First you can train the model using the f
         --training-type="standard" # "distillation" for distillation training (UNet-Attention)
     ```
 
-2. Using a config file (`train_config.yml`):
+- Using a config file (`train_config.yml`):
 
     ```
     python train.py --config train_config.yml
@@ -481,11 +448,11 @@ There are two ways to train the model. First you can train the model using the f
 1. Using a command line
 
     ```bash
-    python inference.py \
-        --noisy_img ./test_images/noisy_tubes.tif \
-        --denoise_method tri_de_fusion \
-        --model_path ./experiments/n2n/models/best_model.pth \
-        --output ./test_images/denoised_tubes.tif
+	python src/inference.py \
+		--input_type image \
+		--input_path ./test_data/noisy.tif \
+		--output_path ./test_data/denoised.tif \
+		--method gaussian
     ```
 
 2. Using a config file (`inference_config.yml`):
@@ -520,14 +487,6 @@ If you use this code please cite the companion paper where the original method a
 Li, X., Zhang, G., Wu, J. et al. Reinforcing neuron extraction and spike inference in calcium imaging using deep self-supervised denoising. Nat Methods (2021). https://doi.org/10.1038/s41592-021-01225-0
 
 ```latex
-%FRT, TriDeFusion-v2 citation
-@inproceedings{zhang2018poisson,
-    title={FRT (Fluorescence Restoration Techniques) - Integrated desktop and web platform solution for advanced fluorescence microscopy denoising and deconvolution techniques},
-    author={Ivan Zolin and Alexander Gerasimenko and Vyacheslav Chukanov and Ekaterina Pchitskaya},
-    booktitle={CVPR},
-    year={2025}
-}
-
 %TriDeFusion-v1 citation
 @INPROCEEDINGS{10758532,
   author={Zolin, Ivan and Chukanov, Vyacheslav and Pchitskaya, Ekaterina},
@@ -541,14 +500,7 @@ Li, X., Zhang, G., Wu, J. et al. Reinforcing neuron extraction and spike inferen
   doi={10.1109/SIBIRCON63777.2024.10758532}}
 ```
 
-## Baselines
 
-- Noise2Noise
-- Non-local Means
-- UNet
-- CARE
-- 3D-RCAN
-- DeepCAD-RT
 
 
 ## License
@@ -565,6 +517,3 @@ Li, X., Zhang, G., Wu, J. et al. Reinforcing neuron extraction and spike inferen
 
 If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
 
-## Contact 
-
-If you have any questions, please raise an issue or contact us at service@deepseek.com.

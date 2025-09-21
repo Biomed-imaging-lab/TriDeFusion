@@ -1,0 +1,45 @@
+gaussian:
+  function: gauss_blur
+  parameters:
+    gaussian_sigma: 1
+
+median:
+  function: median_filter_img
+  parameters:
+    _block_size: 3
+
+bm3d:
+  function: bm3d_denoise
+  parameters:
+    sigma_psd: 0.05
+
+nlm:
+  function: nlm_denoise
+  parameters:
+    h: 10
+    temporal_window: 3
+    template_window: 7
+    search_window: 21
+
+wavelet:
+  function: wavelet_denoise
+  parameters:
+    h: 10
+    search_window: 21
+    block_size: 7
+
+n2n:
+  function: null
+  parameters: {}
+
+tridefusion-v1:
+  function: null
+  parameters: {}
+
+tridefusion-v2:
+  function: null
+  parameters: {}
+
+tridefusion-v2-mini:
+  function: null
+  parameters: {}

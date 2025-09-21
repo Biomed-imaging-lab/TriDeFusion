@@ -1,3 +1,7 @@
+patch_size: 1024
+overlap: 64
+gpu: "0"
+
 exp_name: "n2n"
 exp_dir: "./results"
 noisy_img: "./test_images/noisy_tubes.tif"

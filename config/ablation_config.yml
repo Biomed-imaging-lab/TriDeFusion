@@ -1,0 +1,8 @@
+dataset:
+  path: "./data/synthetic_sticks"
+  image_shape: [40, 512, 512]
+  num_samples: 50
+
+metrics:
+  - PSNR
+  - SSIM
