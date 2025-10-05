@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import os
 
 from tifffile import imread
-from src.denoiser import Denoiser
+from .denoiser import Denoiser
 
 
 class InputType(Enum):
@@ -14,7 +14,7 @@ class InputType(Enum):
 
 
 @dataclass
-class InferenceParams:
+class TestParams:
     input_type: InputType
     input_path: str
     output_path: str
@@ -22,7 +22,7 @@ class InferenceParams:
     fps: int = 15  # only for video
 
 
-def run_inference(params: InferenceParams):
+def run_test(params: TestParams):
     denoiser = Denoiser()
     if params.input_type == InputType.IMAGE:
         noisy_img = imread(params.input_path)
@@ -49,11 +49,11 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    params = InferenceParams(
+    params = TestParams(
         input_type=InputType(args.input_type),
         input_path=args.input_path,
         output_path=args.output_path,
         method=args.method,
         fps=args.fps
     )
-    run_inference(params)
+    run_test(params)

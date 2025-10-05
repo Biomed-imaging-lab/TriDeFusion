@@ -3,44 +3,26 @@ from typing import List
 import numpy as np
 from pathlib import Path
 import tifffile as tiff
-from .exceptions import check_not_none, check_positive_integer
 
 
-def add_poisson_noise(img : np.ndarray, lambda_val : int) -> np.ndarray:
-    return (np.sum([
-                    img.astype("float32"),
-                    (
-                        np.random.poisson(
-                            lam=lambda_val,
-                            size=np.prod(img.shape),
-                        )
-                        .reshape(img.shape)
-                        .astype("float32")
-                    ),
-                ],
-                axis=0,
-            ).astype("float32")).astype("uint8")
+def add_poisson_noise(img: np.ndarray, scale: float = 1.0) -> np.ndarray:
+    """Signal-dependent Poisson noise"""
+    img = img.astype(np.float32)
+    noisy = np.random.poisson(img * scale) / scale
+    return noisy.astype(np.float32)
 
-def add_gaussian_noise(img: np.ndarray, mu: float = 0, sigma: float = 0.1):
-    return (np.sum([
-                    img.astype("float32"),
-                    (
-                        np.random.normal(
-                            loc=mu,
-                            scale=sigma,
-                            size=np.prod(img.shape),
-                        )
-                        .reshape(img.shape)
-                        .astype("float32")
-                    ),
-                ],
-                axis=0,
-            ).astype("float32")).astype("uint8")
+def add_gaussian_noise(img: np.ndarray, mu: float = 0.0, sigma: float = 0.1) -> np.ndarray:
+    """Additive Gaussian noise"""
+    img = img.astype(np.float32)
+    noise = np.random.normal(mu, sigma, img.shape).astype(np.float32)
+    return img + noise
 
-def add_mpg_noise(img: np.ndarray, gaussian_sigma: int = 0.1, poisson_level: int = 8) -> np.ndarray:
-    check_not_none(value=img, name="Clean image")
-    return add_gaussian_noise(img=add_poisson_noise(img=img, lambda_val=poisson_level), sigma=gaussian_sigma)
-
+def add_mpg_noise(img: np.ndarray, gaussian_sigma: float = 0.1, poisson_scale: float = 1.0) -> np.ndarray:
+    """Mixed Poisson-Gaussian noise with clipping to [0,1]"""
+    img_poisson = add_poisson_noise(img, scale=poisson_scale)
+    img_mpg = add_gaussian_noise(img_poisson, sigma=gaussian_sigma)
+    img_mpg = np.clip(img_mpg, 0.0, 1.0)  # ensure valid range
+    return img_mpg.astype(np.float32)
 
 def apply_noise_to_folder(
     input_folder: str,

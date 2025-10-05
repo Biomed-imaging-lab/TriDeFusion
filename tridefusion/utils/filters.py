@@ -2,28 +2,54 @@ import cv2
 import numpy as np
 from scipy.ndimage import gaussian_filter, median_filter
 from bm3d import bm3d
-from .exceptions import check_not_none, check_positive_integer
+from .exceptions import check_not_none, check_positive_integer, check_input_image
 import pywt
 from tridefusion.utils.decorators import performance_monitor
+from bm3d import bm3d, BM3DStages
+from joblib import Parallel, delayed
+import tifffile as tiff
 
-@performance_monitor
-def gauss_blur(img: np.ndarray, gaussian_sigma: int = 3) -> np.ndarray:
+@performance_decorator
+def gaussian_denoise(img: np.ndarray, sigma: int = 3, save_path: str = None,
+                     normalize: bool = True) -> np.ndarray:
+    """
+    Apply Gaussian denoising with universal support for different input types.
+
+    Args:
+        img: Input image (uint8, uint16, float16, float32, float64, etc.)
+        sigma: Gaussian blur sigma
+        save_path: Optional path to save the denoised image
+        normalize: Whether to normalize output to [0,1] float32
+    Returns:
+        Denoised image as float32 (or same dtype as input if normalize=False)
+    """
     try:
-        check_not_none(value=img, name="Image")
-        check_positive_integer(value=gaussian_sigma, name="Gaussian sigma")
-        img = gaussian_filter(img, sigma=gaussian_sigma)
-        return img
+        check_positive_integer(sigma, "Gaussian sigma")
+        check_input_image(img, "Input image", "gaussian_denoise")
+
+        img_f = img.astype(np.float32)
+        denoised = gaussian_filter(img_f, sigma=sigma)
+        if normalize:
+            denoised = normalize_image(denoised)
+        if save_path:
+            save_tiff(denoised, save_path)
+        return denoised
     except Exception as e:
-        print(f"Error in gauss_blur: {str(e)}")
+        print(f"Error in gaussian_denoise: {str(e)}")
         raise
 
-@performance_monitor
-def median_filter_img(img: np.ndarray, _block_size: int = 3) -> np.ndarray:
+@performance_decorator        
+def median_denoise(img: np.ndarray, size: int = 3) -> np.ndarray:
     try:
         check_not_none(value=img, name="Image")
-        check_positive_integer(value=_block_size, name="Block size")
-        img = median_filter(img, size=_block_size)
-        return img
+        check_positive_integer(value=size, name="Block size")
+        img_f = img.astype(np.float32)
+        denoised = median_filter(img_f, size=size)
+        if normalize:
+            denoised = normalize_image(denoised)
+        if save_path:
+            save_tiff(denoised, save_path)
+        return denoised
     except Exception as e:
         print(f"Error in median_filter_img: {str(e)}")
         raise
@@ -85,6 +111,45 @@ def nlm_denoise(img: np.ndarray,
         return np.array(denoised, dtype=float)
     except Exception as e:
         print(f"Error in nlm_denoise: {str(e)}")
+        raise
+
+
+@performance_decorator
+def bm3d_denoise(img_stack: np.ndarray, sigma_psd: float = 0.05, 
+                 n_jobs: int = -1, fast: bool = True, save_path=None) -> np.ndarray:
+    """
+    Apply BM3D denoising to each 2D slice of a 3D stack in parallel.
+    Input: float32 normalized [0,1].
+    Output: float32 normalized [0,1].
+
+    Args:
+        img_stack (np.ndarray): 3D stack (Z, H, W).
+        sigma_psd (float): BM3D noise parameter (0.01–0.1 typical for normalized images).
+        n_jobs (int): Number of parallel jobs (-1 = all cores).
+        fast (bool): Use fast BM3D (HARD_THRESHOLDING) if True.
+        save_path (str, optional): Path to save the output as TIFF.
+
+    Returns:
+        np.ndarray: Denoised 3D stack (float32 [0,1]).
+    """
+    try:
+        check_input_image(img_stack, 'Noisy image', 'bm3d_denoise')
+        img_stack = img_stack.astype(np.float32)
+        if img_stack.max() > 1.0:
+            img_stack /= 255.0
+        denoised_slices = Parallel(n_jobs=n_jobs)(
+            delayed(bm3d_slice_denoise)(img_stack[z], sigma_psd, fast)
+            for z in range(img_stack.shape[0])
+        )
+
+        denoised = np.stack(denoised_slices, axis=0).astype(np.float32)
+        denoised = normalize_image(denoised)
+        if save_path:
+            tiff.imwrite(save_path, (denoised*255).astype(np.uint8))
+        return denoised
+
+    except (ValueError, Exception) as e:
+        print(f"Error in bm3d_denoise: {str(e)}")
         raise
 
 def wavelet_denoise_layer(layer, wavelet, level):

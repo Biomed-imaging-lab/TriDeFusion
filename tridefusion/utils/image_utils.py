@@ -8,6 +8,20 @@ import torch
 import tifffile
 
 
+def normalize_image(img: np.ndarray) -> np.ndarray:
+    """Normalize image to [0,1] float32"""
+    img_min = np.min(img)
+    img_max = np.max(img)
+    if img_max - img_min < 1e-12:
+        return np.zeros_like(img, dtype=np.float32)
+    return ((img - img_min) / (img_max - img_min)).astype(np.float32)
+
+def float32_to_uint8(img: np.ndarray) -> np.ndarray:
+    return (img * 255).astype(np.uint8)
+
+def uint8_to_float32(img: np.ndarray) -> np.ndarray:
+    return img.astype(np.float32) / 255.0 
+
 def load_image():
     pass
 
@@ -23,11 +37,6 @@ def save_image(image_numpy: np.ndarray, image_path: str) -> None:
             tifffile.imsave(image_path, image_numpy)
     except Exception as e:
         print(f"Error in tensor2im: {str(e)}")    
-
-
-def normalize_image(image: np.ndarray) -> np.ndarray:
-    return (image - np.min(image)) / (np.max(image) - np.min(image) + 1e-8)
-
 
 def print_numpy(x: np.ndarray, val=True, shp=False):
     """Print the mean, min, max, median, std, and size of a numpy array

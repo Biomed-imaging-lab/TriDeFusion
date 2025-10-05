@@ -1,20 +1,34 @@
-from typing import Union, List
+from typing import Any, Union, List
+import numpy as np
 
 
-def check_positive_integer(value: Union[int, List[int]], name: str) -> bool:
-    if not isinstance(value, (int, list)):
-        raise ValueError(f"{name} must be a positive integer or a list of positive integers.")
-    if (isinstance(value, int) and value < 0) or (isinstance(value, list) and not all(v < 0 for v in value)):
-        return False
+def check_positive_integer(value: Union[int, List[int]], name: str):
+    if isinstance(value, int) or isinstance(value, float):
+        assert value > 0, f"{name} must be a positive integer."
     else:
-        return True
+        assert all(v > 0 for v in value), f"All elements in {name} must be positive integers."
 
-def check_not_none(value, name, func_name = None):
-    """Check that a value is not None."""
+def check_not_none(value: Any, name: str, func_name: str = None):
     func_desc = f" Run {func_name} first." if func_name else ""
-    if value is None:
-        raise ValueError(f"{name} should not be None" + func_desc)
+    assert value is not None and (not isinstance(value, list) or len(value) > 0), (f"{name} is not available."
+                                                                                   f"{func_desc}")
     
-def valid_method_name(method: str, method_list: List[str], method_type: str):
-    if method is None or method not in method_list:
-        raise ValueError(f"Incorrect {method_type} type not found in the cache.")
+def valid_method_name(method: str, method_list: List[str], method_name: str):
+    if not isinstance(method, str) or method is None or method not in method_list:
+        raise ValueError(f"Incorrect {method_name} type not found in the cache.")
+
+def check_input_image(image: Any, name: str, func_name: str = None):
+    """Validate the input image format and dimensions.
+    Args:
+        image (Any): The input image.
+        name (str): Name of the image variable (for error messages).
+        func_name (str, optional): Function name where the check is performed.
+    Raises:
+        TypeError: If the image is not a NumPy array.
+        ValueError: If the image does not have 2, 3 or 4 dimensions.
+    """
+    check_not_none(image, name, func_name) 
+    if not isinstance(image, np.ndarray):
+        raise TypeError(f"{'[' + func_name + '] ' if func_name else ''}{name} must be a NumPy array.")
+    if image.ndim not in [2, 3, 4]:
+        raise ValueError(f"{'[' + func_name + '] ' if func_name else ''}{name} must be a 2D, 3D or 4D NumPy array.")

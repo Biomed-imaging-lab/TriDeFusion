@@ -1,7 +1,8 @@
 import importlib
+from pathlib import Path
 from typing import Any, Callable, Tuple
 import yaml
-from src.logger import Logger
+from .utils.logger import Logger
 import os
 import cv2
 import asyncio
@@ -9,9 +10,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tifffile import imread, imwrite
-from src.utils.image_utils import normalize_image
-from src.utils.exceptions import check_not_none, valid_method_name
-from src.decorators import memory_monitor
+# from src.utils.image_utils import normalize_image
+# from src.utils.exceptions import check_not_none, valid_method_name
+from .utils.decorators import memory_monitor
 
 
 SHOW_LOG = True
@@ -21,10 +22,28 @@ class Denoiser:
         self.logger = Logger(SHOW_LOG)
         self.__noisy_data = None
         self.__denoised_data = None
-        self.log = logger.get_logger(__name__)
+        self.logger = Logger(show=SHOW_LOG).get_logger(__name__)
+        self.logger.info("Denoiser created with config: %s", config_path)
         with open(config_path, "r") as f:
             self.config = yaml.safe_load(f)
-        self.log.info("Denoiser is ready")
+
+    def _load_config(self, path: str, debug: bool = True) -> dict:
+        """Load method configuration from YAML file."""
+        config_file = Path(path)
+        if not config_file.exists():
+            self.logger.warning("Config file %s not found. Using defaults.", path)
+            return {}
+        with open(config_file, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+        if debug:
+            self.logger.info("Loaded config parameters:", config)
+        self.logger.info("Loaded config from %s: %s", path, config)
+        return config or {}
+    
+    @memory_monitor 
+    def process():
+        pass
+
 
     @property
     def noisy_data(self) -> np.ndarray:
@@ -34,7 +53,7 @@ class Denoiser:
     def denoised_data(self) -> np.ndarray:
         return self.__denoised_data
     
-    @performance_decorator 
+    @memory_monitor 
     def tridefusion_denoise(img: np.ndarray, 
                             nn_model: Any, 
                             filter_func: Tuple[str, Callable[[np.ndarray], np.ndarray]], 

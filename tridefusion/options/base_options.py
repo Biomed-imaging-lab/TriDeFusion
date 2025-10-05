@@ -2,7 +2,7 @@ import argparse
 import os
 import torch
 # import models
-from ..utils.data_utils import mkdir, mkdirs
+from ..data.data_utils import mkdir, mkdirs
 
 
 class BaseOptions():

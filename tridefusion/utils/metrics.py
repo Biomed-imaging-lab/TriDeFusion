@@ -2,6 +2,7 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import tifffile as tiff
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import pearsonr
@@ -121,8 +122,8 @@ def compute_image_metrics(file_path: Path, gt_folder: Path, method_name: str) ->
         print(f"Warning: GT file not found for {file_path}, skipping...")
         return None
 
-    denoised_img = tifffile.imread(file_path)
-    gt_img = tifffile.imread(gt_path)
+    denoised_img = tiff.imread(file_path)
+    gt_img = tiff.imread(gt_path)
     gt_norm = (gt_img - gt_img.min()) / (gt_img.max() - gt_img.min())
     denoised_norm = (denoised_img - denoised_img.min()) / (denoised_img.max() - denoised_img.min())
     
@@ -171,8 +172,8 @@ def calc_metrics(
                 print(f"Warning: GT file not found for {file_path}, skipping...")
                 continue
 
-            denoised_img = tifffile.imread(file_path)
-            gt_img = tifffile.imread(gt_path)
+            denoised_img = tiff.imread(file_path)
+            gt_img = tiff.imread(gt_path)
 
             # Normalize images to [0,1]
             gt_norm = (gt_img - gt_img.min()) / (gt_img.max() - gt_img.min())

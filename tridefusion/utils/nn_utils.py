@@ -36,7 +36,10 @@ def reformat_to_zchw(img: np.ndarray) -> np.ndarray:
     raise ValueError(f"Unsupported input shape: {original_shape}")
 
 @performance_monitor  
-def nn_denoise(img: np.ndarray, model: Any, save_path=None, device='cuda'):
+def nn_denoise(img: np.ndarray, 
+               model: Any, 
+               save_path=None, 
+               device='cuda') -> np.ndarray:
     """
     Denoise a 3D image stack using a pretrained model.
     Preserves original dtype in output.
@@ -86,4 +89,37 @@ def nn_denoise(img: np.ndarray, model: Any, save_path=None, device='cuda'):
         return denoised
     except Exception as e:
         print(f"Error in nn_denoise: {str(e)}")
+        raise
+
+def onnx_export(Model: Any,
+                chkpt_path: str,
+                onnx_path: str,
+                in_channels=1,
+                out_channels=1,
+                device='cuda'
+                ) -> bool:
+    try:
+        model = Model(in_channels, out_channels).to(device)
+        state_dict = torch.load(chkpt_path, map_location=device)
+        model.load_state_dict(state_dict)
+        model.eval()
+        model = model.half()
+        dummy_input = torch.randn(1, in_channels, 256, 256).half().to(device)
+        torch.onnx.export(
+            model,
+            dummy_input,
+            onnx_path,
+            export_params=True,
+            opset_version=17,
+            do_constant_folding=True,
+            input_names=["input"],
+            output_names=["output"],
+            dynamic_axes={
+                "input": {0: "batch", 2: "height", 3: "width"},
+                "output": {0: "batch", 2: "height", 3: "width"}
+            }
+        )
+        print("ONNX export completed: dynamic batch, height, width enabled")
+    except Exception as e:
+        print(f"Error in onnx_export: {str(e)}")
         raise
