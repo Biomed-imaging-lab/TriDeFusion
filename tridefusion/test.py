@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import os
 
 from tifffile import imread
-from .denoiser import Denoiser
+# from .denoiser import Denoiser
 
 
 class InputType(Enum):
@@ -23,18 +23,19 @@ class TestParams:
 
 
 def run_test(params: TestParams):
-    denoiser = Denoiser()
-    if params.input_type == InputType.IMAGE:
-        noisy_img = imread(params.input_path)
-        denoiser.denoise_image(noisy_img, method=params.method, save_path=params.output_path)
-    elif params.input_type == InputType.FOLDER:
-        denoiser.denoise_folder(input_dir=params.input_path, output_dir=params.output_path)
-    elif params.input_type == InputType.VIDEO:
-        denoiser.denoise_video(video_path=params.input_path,
-                               output_frames_dir=params.output_path,
-                               fps=params.fps)
-    else:
-        raise ValueError(f"Unsupported input type: {params.input_type}")
+    pass
+    # denoiser = Denoiser()
+    # if params.input_type == InputType.IMAGE:
+    #     noisy_img = imread(params.input_path)
+    #     denoiser.denoise_image(noisy_img, method=params.method, save_path=params.output_path)
+    # elif params.input_type == InputType.FOLDER:
+    #     denoiser.denoise_folder(input_dir=params.input_path, output_dir=params.output_path)
+    # elif params.input_type == InputType.VIDEO:
+    #     denoiser.denoise_video(video_path=params.input_path,
+    #                            output_frames_dir=params.output_path,
+    #                            fps=params.fps)
+    # else:
+    #     raise ValueError(f"Unsupported input type: {params.input_type}")
 
 
 def parse_args():

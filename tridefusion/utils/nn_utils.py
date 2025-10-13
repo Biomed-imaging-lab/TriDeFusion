@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 import numpy as np
 import torch
 import tifffile as tiff
@@ -122,4 +122,152 @@ def onnx_export(Model: Any,
         print("ONNX export completed: dynamic batch, height, width enabled")
     except Exception as e:
         print(f"Error in onnx_export: {str(e)}")
+        raise
+
+
+def tile_inference_forward(model, tensor, tile_size=(256,256), overlap=16, amp=True):
+    """
+    Run model on large HxW image using overlapping tiles.
+    tensor: [1,C,H,W] float32 CPU tensor moved to device inside.
+    Returns CPU numpy array [1,C,H,W] float32.
+    """
+    _, C, H, W = tensor.shape
+    device = next(model.parameters()).device
+    out = np.zeros((1, C, H, W), dtype=np.float32)
+    weight = np.zeros((1, C, H, W), dtype=np.float32)
+
+    stride_h = tile_size[0] - overlap
+    stride_w = tile_size[1] - overlap
+
+    # generate tile top-left coordinates
+    hs = list(range(0, H, stride_h))
+    ws = list(range(0, W, stride_w))
+    # ensure last tile covers the end
+    if hs[-1] + tile_size[0] < H:
+        hs.append(max(0, H - tile_size[0]))
+    if ws[-1] + tile_size[1] < W:
+        ws.append(max(0, W - tile_size[1]))
+
+    for y in hs:
+        for x in ws:
+            y1, y2 = y, min(y + tile_size[0], H)
+            x1, x2 = x, min(x + tile_size[1], W)
+
+            patch = tensor[:, :, y1:y2, x1:x2].to(device, non_blocking=True)
+            with torch.no_grad():
+                if amp:
+                    with torch.cuda.amp.autocast():
+                        out_patch = model(patch)
+                else:
+                    out_patch = model(patch)
+            out_patch_np = out_patch.detach().cpu().float().numpy()
+
+            out[:, :, y1:y2, x1:x2] += out_patch_np
+            weight[:, :, y1:y2, x1:x2] += 1.0
+
+            # free GPU memory of patch and model output
+            del patch, out_patch
+            torch.cuda.empty_cache()
+
+    # avoid division by zero
+    weight[weight == 0] = 1.0
+    out = out / weight
+    return out
+
+@performance_monitor
+def rauden_denoise(img: np.ndarray,
+               model: Any,
+               save_path: Optional[str] = None,
+               device: str = 'cuda',
+               use_half: bool = True,
+               use_amp: bool = True,
+               tile_size: Optional[tuple] = None):
+    """
+    Memory-optimized neural-network denoising.
+    - img: input image (Z,H,W) or (Z,C,H,W)
+    - model: PyTorch model (already loaded)
+    - device: 'cuda' or 'cpu'
+    - use_half: convert model to half precision (if supported)
+    - use_amp: use torch.cuda.amp.autocast() during inference
+    - tile_size: (h,w) to enable tiled inference on each slice (optional). If None, whole-slice forward.
+    """
+    try:
+        original_dtype = img.dtype
+        zchw = reformat_to_zchw(img)  # (Z,C,H,W)
+        # Normalize to [0,1] on CPU
+        zchw = zchw.astype(np.float32)
+        zchw = (zchw - zchw.min()) / (zchw.max() - zchw.min() + 1e-8)
+
+#         model_was_training = model.training
+        model.to(device)
+        model.eval()
+
+        # Optionally convert model to half precision (WARNING: check compatibility)
+        if use_half:
+            try:
+                model.half()
+            except Exception:
+                # some layers may not support half — fallback
+                model = model.float()
+
+        Z, C, H, W = zchw.shape
+        # Preallocate CPU output in float32
+        denoised_stack = np.zeros((Z, C, H, W), dtype=np.float32)
+
+        for z in range(Z):
+            # Build input tensor for this slice: [1,C,H,W]
+            slice_np = zchw[z:z+1]  # shape (1,C,H,W)
+            tensor = torch.from_numpy(slice_np).to(device, non_blocking=True)
+
+            # Ensure tensor dtype matches model dtype
+            if next(model.parameters()).dtype == torch.float16:
+                tensor = tensor.half()
+            else:
+                tensor = tensor.float()
+
+            with torch.no_grad():
+                if tile_size is None:
+                    # Single forward for whole slice
+                    if use_amp and device.startswith('cuda'):
+                        with torch.cuda.amp.autocast():
+                            out_tensor = model(tensor)
+                    else:
+                        out_tensor = model(tensor)
+                    out_np = out_tensor.detach().cpu().float().numpy()
+                    # Free GPU tensors
+                    del out_tensor
+                    torch.cuda.empty_cache()
+                else:
+                    # Tiled forward for large HxW
+                    out_np = tile_inference_forward(model, tensor, tile_size=tile_size, overlap=16, amp=use_amp)
+
+                # move to CPU buffer
+                denoised_stack[z:z+1] = out_np.astype(np.float32)
+
+            # free GPU input tensor
+            del tensor
+            torch.cuda.empty_cache()
+
+        # # restore model training state if needed
+        # model.train(model_was_training)
+
+        # convert back to original dtype/range
+        denoised_stack = np.clip(denoised_stack, 0.0, 1.0)
+        if np.issubdtype(original_dtype, np.integer):
+            max_val = np.iinfo(original_dtype).max
+            denoised = (denoised_stack * max_val).astype(original_dtype)
+        else:
+            denoised = denoised_stack.astype(original_dtype)
+
+        if save_path:
+            tiff.imwrite(save_path, denoised)
+
+        # If channel dim was singular (1) and original had no channel, remove channel axis
+        if denoised.ndim == 4 and denoised.shape[1] == 1:
+            denoised = denoised[:, 0, :, :]
+
+        return denoised
+
+    except Exception as e:
+        print(f"Error in nn_denoise: {e}")
         raise
