@@ -9,11 +9,7 @@ from typing import List, Tuple
 import numpy as np
 import tifffile as tiff
 from PyQt5 import QtWidgets, QtCore, QtGui
-
-
-def list_3d_tiff_files(folder: Path) -> List[Path]:
-    exts = {".tif", ".tiff"}
-    return [p for p in sorted(folder.iterdir()) if p.suffix.lower() in exts and p.is_file()]
+from .utils import list_3d_tiff_files, to_grayscale
 
 
 def sample_boxes_for_volume(shape: Tuple[int, int, int], box_size: int, count: int, rng: random.Random) -> List[Tuple[int, int, int]]:
@@ -54,6 +50,7 @@ class ExtractWorker(QtCore.QRunnable):
                 try:
                     self.signals.log.emit(f"Reading: {fpath}")
                     arr = tiff.imread(str(fpath))
+                    arr = to_grayscale(arr)
                     if arr.ndim == 4 and arr.shape[0] == 1:
                         arr = arr[0]
                     if arr.ndim != 3:

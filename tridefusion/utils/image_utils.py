@@ -195,22 +195,47 @@ def extract_plane(img: np.ndarray, index: int, axis: int) -> np.ndarray:
     return np.copy(np.take(img, index, axis=axis))
 
 
-def create_tiff_multistack(folder_path: str, 
-                           output_path: str):
+def split_3d_array_into_k(arr: np.ndarray, k: int) -> list[np.ndarray]:
     """
-    Creates a multi-stack TIFF file from a folder containing JPEG images.
-    Args:
-        folder_path (str): Path to the folder containing JPEG images.
-        output_path (str): Path to save the output TIFF file.
+    Split a 3D numpy array (D, H, W) into k subarrays along the depth axis.
+    Parameters:
+        arr: np.ndarray
+            Input 3D array of shape (D, H, W).
+        k: int
+            Number of chunks to split into.
+
+    Returns:
+        chunks: list[np.ndarray]
+            List of length k, each of shape (D/k, H, W).
     """
-    images = sorted([f for f in os.listdir(folder_path) if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')])
-    if not images:
-        raise ValueError("No JPEG images found in the specified folder.")
+    D = arr.shape[0]
+    base = D // k
+    extra = D % k
+    chunks = []
+    start = 0
+    for i in range(k):
+        size = base + (1 if i < extra else 0)
+        chunks.append(arr[start:start+size])
+        start += size
+    return chunks
+
+
+# def create_tiff_multistack(folder_path: str, 
+#                            output_path: str):
+#     """
+#     Creates a multi-stack TIFF file from a folder containing JPEG images.
+#     Args:
+#         folder_path (str): Path to the folder containing JPEG images.
+#         output_path (str): Path to save the output TIFF file.
+#     """
+#     images = sorted([f for f in os.listdir(folder_path) if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')])
+#     if not images:
+#         raise ValueError("No JPEG images found in the specified folder.")
     
-    img_list = [cv2.imread(os.path.join(folder_path, img), cv2.IMREAD_COLOR)  for img in images]
-    img_list[0].save(output_path, save_all=True, append_images=img_list[1:], format='TIFF')
-    _noisy_img = load_image(output_path)
-    controller = DenoiseController()
-    controller.preprocess_image(_noisy_img)
-    _noisy_img = controller.noisy_img
-    print(f"Multi-stack TIFF saved to {output_path}")
+#     img_list = [cv2.imread(os.path.join(folder_path, img), cv2.IMREAD_COLOR)  for img in images]
+#     img_list[0].save(output_path, save_all=True, append_images=img_list[1:], format='TIFF')
+#     _noisy_img = load_image(output_path)
+#     controller = DenoiseController()
+#     controller.preprocess_image(_noisy_img)
+#     _noisy_img = controller.noisy_img
+#     print(f"Multi-stack TIFF saved to {output_path}")
