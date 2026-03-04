@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modules.attention import AttentionBlock
+from tridefusion.models.modules.old.attention import AttentionBlock
 from modules.residual import ResidualBlock
 
 

@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Tuple
 import cv2
 from matplotlib import pyplot as plt
+import pandas as pd
 import seaborn as sns
 import numpy as np
 
@@ -215,3 +216,74 @@ def draw_box_plots(
                 f"Box Plot for {metric_name}", 
                 save_path
             )
+
+
+def draw_minimalist_boxplots(
+    df: pd.DataFrame, 
+    columns: List[str], 
+    colors=Optional[Dict[str, str]] = None,
+    figsize=(8, 6), 
+    x_angle=45,
+    auto_log=True, 
+    log_threshold=1.0, 
+    log_fraction=0.8
+):
+    """
+    Draws minimalist box plots for selected numeric columns, grouped by method.
+    Automatically switches to log scale if values are between 0 and 1.
+    """
+    methods = df["Method"].astype(str).unique()
+    if colors is None:
+        colors = {m: f"C{i}" for i, m in enumerate(methods)}
+    fig, axes = plt.subplots(
+        1, len(columns), figsize=(figsize[0] * len(columns), figsize[1])
+    )
+    if len(columns) == 1:
+        axes = [axes]
+    for ax, col in zip(axes, columns):
+        col_values = df[col].dropna().astype(float).values
+
+        use_log = False
+        if auto_log:
+            small_vals = (col_values > 0) & (col_values < log_threshold)
+            if small_vals.mean() >= log_fraction:
+                use_log = True
+                ax.set_yscale("log")
+
+        data = [df[df["Method"].astype(str) == m][col] for m in methods]
+        bp = ax.boxplot(
+            data,
+            labels=methods,
+            patch_artist=True,
+            medianprops=dict(color='black', linewidth=2),
+            whiskerprops=dict(color='black', linewidth=1.5),
+            capprops=dict(color='black', linewidth=1.5),
+            flierprops=dict(marker='o', color='black', alpha=0.5)
+        )
+
+        for patch, method in zip(bp["boxes"], methods):
+            patch.set_facecolor(colors.get(method, "lightgray"))
+            patch.set_edgecolor("black")
+            patch.set_linewidth(1.5)
+
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_color("black")
+            spine.set_linewidth(1.5)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.set_facecolor("none")
+        fig.patch.set_alpha(0)
+
+        plt.setp(ax.get_xticklabels(), rotation=x_angle, ha="right",
+                 fontsize=18, fontweight="bold")
+        fig.canvas.draw_idle()
+        for tick in ax.get_yticklabels():
+            tick.set_fontsize(18)
+            tick.set_fontweight("bold")
+
+        ax.set_title(col, fontsize=20, fontweight="bold", pad=12)
+        ax.tick_params(left=False, bottom=False)
+
+    plt.tight_layout()
+    plt.show()

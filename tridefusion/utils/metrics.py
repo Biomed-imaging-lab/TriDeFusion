@@ -180,8 +180,8 @@ def calc_metrics(
             denoised_norm = (denoised_img - denoised_img.min()) / (denoised_img.max() - denoised_img.min())
 
             # Compute metrics
-            psnr_val = peak_signal_noise_ratio(gt_norm, denoised_norm, data_range=1.0)
-            ssim_val = structural_similarity(gt_norm, denoised_norm, data_range=1.0)
+            psnr_val = psnr(gt_norm, denoised_norm, data_range=1.0)
+            ssim_val = ssim(gt_norm, denoised_norm, data_range=1.0)
             mae_val = compute_mae(gt_norm, denoised_norm)
             lpips_val = compute_lpips_stack(gt_norm, denoised_norm)
             # ms_ssim_val = compute_ms_ssim(gt_norm, denoised_norm)
@@ -201,5 +201,4 @@ def calc_metrics(
     # Optionally save to CSV
     if csv_path:
         df.to_csv(csv_path, index=False)
-
     return df

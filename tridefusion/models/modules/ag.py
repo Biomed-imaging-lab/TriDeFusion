@@ -1,4 +1,6 @@
+import torch
 from torch import nn
+
 
 class AttentionGate(nn.Module):
     def __init__(self, in_channels):

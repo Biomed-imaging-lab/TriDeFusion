@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from flash_attn import flash_attn_func  # core FlashAttention function
+from flash_attn import flash_attn_func
 
 class FlashSelfAttention(nn.Module):
     def __init__(self, in_channels, reduction=4, dropout=0.0):
@@ -18,8 +18,6 @@ class FlashSelfAttention(nn.Module):
 
         b, c, h, w = x.shape
         seq_len = h * w
-
-        # Project Q, K, V
         q = self.q_proj(x).flatten(2).transpose(1, 2)  # [B, HW, Cq]
         k = self.k_proj(x).flatten(2).transpose(1, 2)  # [B, HW, Ck]
         v = self.v_proj(x).flatten(2).transpose(1, 2)  # [B, HW, Cv]

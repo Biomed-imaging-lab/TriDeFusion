@@ -22,8 +22,44 @@ def float32_to_uint8(img: np.ndarray) -> np.ndarray:
 def uint8_to_float32(img: np.ndarray) -> np.ndarray:
     return img.astype(np.float32) / 255.0 
 
-def load_image():
-    pass
+def crop_3d(array: np.ndarray,
+            tile_size: Tuple[int, int, int],
+            stride: Tuple[int, int, int] = None):
+    """
+    Split a 3D numpy array into smaller 3D subarrays.
+    Parameters
+    ----------
+    array : np.ndarray
+        3D array of shape (D, H, W)
+    tile_size : tuple
+        Size of each tile as (d, h, w)
+    stride : tuple or None
+        Step between tiles. If None → equals tile_size (non-overlapping).
+    Returns
+    -------
+    tiles : list of np.ndarray
+        List of 3D tiles
+    coords : list of tuple
+        (z, y, x) origin for each tile
+    """
+
+    assert array.ndim == 3, "Input array must be 3D"
+    D, H, W = array.shape
+    d, h, w = tile_size
+    if stride is None:
+        stride = tile_size
+    sz, sy, sx = stride
+    tiles = []
+    coords = []
+
+    for z in range(0, D - d + 1, sz):
+        for y in range(0, H - h + 1, sy):
+            for x in range(0, W - w + 1, sx):
+
+                tile = array[z:z+d, y:y+h, x:x+w]
+                tiles.append(tile)
+                coords.append((z, y, x))
+    return tiles, coords
 
 def save_image(image_numpy: np.ndarray, image_path: str) -> None:
     """Save a numpy image to the disk

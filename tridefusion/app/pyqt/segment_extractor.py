@@ -65,7 +65,8 @@ class ExtractWorker(QtCore.QRunnable):
                     out_dir = self.out_root / fpath.stem
                     out_dir.mkdir(parents=True, exist_ok=True)
                     params = []
-                    for i, (z0, y0, x0) in enumerate(boxes, start=1):
+                    z0 = z_dim // 2
+                    for i, (_, y0, x0) in enumerate(boxes, start=1):
                         z1, y1, x1 = z0 + self.box_size, y0 + self.box_size, x0 + self.box_size
                         seg = arr[z0:z1, y0:y1, x0:x1]
                         mean_int = float(np.mean(seg))
@@ -115,12 +116,22 @@ class BackgroundExtractWorker(QtCore.QRunnable):
                     boxes = []
                     attempts = 0
                     max_attempts = self.count * 10  # avoid infinite loop
+                    if y_dim < self.box_size or x_dim < self.box_size:
+                        raise ValueError(f"Image too small for box size {self.box_size}: {arr.shape}")
+
+                    
+
                     while len(boxes) < self.count and attempts < max_attempts:
-                        z0 = rng.randint(0, z_dim - self.box_size)
-                        y0 = rng.randint(0, y_dim - self.box_size)
-                        x0 = rng.randint(0, x_dim - self.box_size)
-                        seg = arr[z0:z0+self.box_size, y0:y0+self.box_size, x0:x0+self.box_size]
-                        if float(np.mean(seg)) <= self.threshold:
+                        y_max = y_dim - self.box_size
+                        x_max = x_dim - self.box_size
+                        y0 = rng.randint(0, y_max)
+                        x0 = rng.randint(0, x_max)
+                        patch = arr[
+                            y0:y0 + self.box_size,
+                            x0:x0 + self.box_size
+                        ]
+                        # seg = arr[z0:z0+self.box_size, y0:y0+self.box_size, x0:x0+self.box_size]
+                        if float(np.mean(patch)) <= self.threshold:
                             boxes.append((z0, y0, x0))
                         attempts += 1
 

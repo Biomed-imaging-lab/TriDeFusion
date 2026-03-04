@@ -13,10 +13,20 @@ __pycache__/
 *.tiff
 *.tif
 *.pth
+*.onnx
 *.pt
 *.log
 
 dataset/
 experiments/
+baselines/
+test_all/
 
+tridefusion/notebooks/white_profiles/
 tridefusion/notebooks/utils_notebook.ipynb
+tridefusion/notebooks/imagej_utils.ipynb
+tridefusion/notebooks/difmap_validation.ipynb
+
+tridefusion/src/old
+tridefusion/utils/old
+tridefusion/models/old

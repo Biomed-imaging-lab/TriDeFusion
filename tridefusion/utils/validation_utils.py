@@ -1,19 +1,12 @@
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 import re
 from typing import Callable, List, Tuple
 import numpy as np
 from pathlib import Path
-from matplotlib import cm, pyplot as plt
-import pandas as pd
-from skimage.metrics import peak_signal_noise_ratio as psnr
-from skimage.metrics import structural_similarity as ssim
+from matplotlib import pyplot as plt
 import tifffile as tiff
-import torch
-# from src.utils.image_utils import extract_segment_from_layer
-# from src.utils.plot import draw_histograms
+from skimage import measure
 
 
 def extract_noise_levels(folder_name: str) -> dict:
@@ -29,77 +22,77 @@ def extract_noise_levels(folder_name: str) -> dict:
     gauss_level = float(match_gauss.group(1)) if match_gauss else 0.0
     return {"poisson": poisson_level, "gauss": gauss_level}
 
-def _calc_metric(gt_path: Path, file_path: Path) -> dict:
-    """Compute metrics between GT and denoised images."""
-    denoised_img = tiff.imread(file_path).astype(np.float32)
-    gt_img = tiff.imread(gt_path).astype(np.float32)
-    gt_norm = (gt_img - gt_img.min()) / (gt_img.max() - gt_img.min() + 1e-8)
-    denoised_norm = (denoised_img - denoised_img.min()) / (denoised_img.max() - denoised_img.min() + 1e-8)
-    psnr_val = peak_signal_noise_ratio(gt_norm, denoised_norm, data_range=1.0)
-    ssim_val = structural_similarity(gt_norm, denoised_norm, data_range=1.0)
-    gt_tensor = torch.tensor(gt_norm, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-    dn_tensor = torch.tensor(denoised_norm, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-    ms_ssim_val = ms_ssim(gt_tensor, dn_tensor, data_range=1.0).item()
-    mae_val = compute_mae(gt_norm, denoised_norm)
-    lpips_val = compute_lpips_stack(gt_norm, denoised_norm)
-    return {
-        "PSNR": psnr_val,
-        "SSIM": ssim_val,
-        "MS-SSIM": ms_ssim_val,
-        "MAE": mae_val,
-        "LPIPS": lpips_val
-    }
+# def _calc_metric(gt_path: Path, file_path: Path) -> dict:
+#     """Compute metrics between GT and denoised images."""
+#     denoised_img = tiff.imread(file_path).astype(np.float32)
+#     gt_img = tiff.imread(gt_path).astype(np.float32)
+#     gt_norm = (gt_img - gt_img.min()) / (gt_img.max() - gt_img.min() + 1e-8)
+#     denoised_norm = (denoised_img - denoised_img.min()) / (denoised_img.max() - denoised_img.min() + 1e-8)
+#     psnr_val = peak_signal_noise_ratio(gt_norm, denoised_norm, data_range=1.0)
+#     ssim_val = structural_similarity(gt_norm, denoised_norm, data_range=1.0)
+#     gt_tensor = torch.tensor(gt_norm, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+#     dn_tensor = torch.tensor(denoised_norm, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+#     ms_ssim_val = ms_ssim(gt_tensor, dn_tensor, data_range=1.0).item()
+#     mae_val = compute_mae(gt_norm, denoised_norm)
+#     lpips_val = compute_lpips_stack(gt_norm, denoised_norm)
+#     return {
+#         "PSNR": psnr_val,
+#         "SSIM": ssim_val,
+#         "MS-SSIM": ms_ssim_val,
+#         "MAE": mae_val,
+#         "LPIPS": lpips_val
+#     }
 
-def calc_metrics(gt_folder: str, denoised_root: str, csv_dir: str = "./results"):
-    """
-    Compute metrics for all methods and noise levels.
-    Saves:
-      - One CSV per method: <csv_dir>/<method>.csv
-      - One combined CSV: <csv_dir>/all_methods.csv
-    """
-    gt_folder = Path(gt_folder)
-    denoised_root = Path(denoised_root)
-    csv_dir = Path(csv_dir)
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    all_results = []
+# def calc_metrics(gt_folder: str, denoised_root: str, csv_dir: str = "./results"):
+#     """
+#     Compute metrics for all methods and noise levels.
+#     Saves:
+#       - One CSV per method: <csv_dir>/<method>.csv
+#       - One combined CSV: <csv_dir>/all_methods.csv
+#     """
+#     gt_folder = Path(gt_folder)
+#     denoised_root = Path(denoised_root)
+#     csv_dir = Path(csv_dir)
+#     csv_dir.mkdir(parents=True, exist_ok=True)
+#     all_results = []
 
-    for method_path in sorted(denoised_root.iterdir()):
-        if not method_path.is_dir():
-            continue
-        method_name = method_path.name
-        method_results = []
-        for noise_path in sorted(method_path.iterdir()):
-            if not noise_path.is_dir():
-                continue
+#     for method_path in sorted(denoised_root.iterdir()):
+#         if not method_path.is_dir():
+#             continue
+#         method_name = method_path.name
+#         method_results = []
+#         for noise_path in sorted(method_path.iterdir()):
+#             if not noise_path.is_dir():
+#                 continue
 
-            noise_levels = extract_noise_levels(noise_path.name)
-            for file_path in noise_path.rglob("*.tif*"):
-                gt_path = gt_folder / file_path.name
-                if not gt_path.exists():
-                    print(f"⚠️ Warning: GT file not found for {file_path}, skipping...")
-                    continue
-                metrics = _calc_metric(gt_path, file_path)
-                entry = {
-                    "Method": method_name,
-                    "NoiseFolder": noise_path.name,
-                    "Poisson": noise_levels["poisson"],
-                    "Gauss": noise_levels["gauss"],
-                    "File": file_path.name,
-                    **metrics,
-                }
-                method_results.append(entry)
-                all_results.append(entry)
-        if method_results:
-            df_method = pd.DataFrame(method_results)
-            method_csv_path = csv_dir / f"{method_name}.csv"
-            df_method.to_csv(method_csv_path, index=False)
-            print(f"Saved metrics for {method_name} → {method_csv_path}")
-    if all_results:
-        df_all = pd.DataFrame(all_results)
-        all_csv_path = csv_dir / "all_methods.csv"
-        df_all.to_csv(all_csv_path, index=False)
-        print(f"Saved combined metrics → {all_csv_path}")
-    return pd.DataFrame(all_results)
+#             noise_levels = extract_noise_levels(noise_path.name)
+#             for file_path in noise_path.rglob("*.tif*"):
+#                 gt_path = gt_folder / file_path.name
+#                 if not gt_path.exists():
+#                     print(f"⚠️ Warning: GT file not found for {file_path}, skipping...")
+#                     continue
+#                 metrics = _calc_metric(gt_path, file_path)
+#                 entry = {
+#                     "Method": method_name,
+#                     "NoiseFolder": noise_path.name,
+#                     "Poisson": noise_levels["poisson"],
+#                     "Gauss": noise_levels["gauss"],
+#                     "File": file_path.name,
+#                     **metrics,
+#                 }
+#                 method_results.append(entry)
+#                 all_results.append(entry)
+#         if method_results:
+#             df_method = pd.DataFrame(method_results)
+#             method_csv_path = csv_dir / f"{method_name}.csv"
+#             df_method.to_csv(method_csv_path, index=False)
+#             print(f"Saved metrics for {method_name} → {method_csv_path}")
+#     if all_results:
+#         df_all = pd.DataFrame(all_results)
+#         all_csv_path = csv_dir / "all_methods.csv"
+#         df_all.to_csv(all_csv_path, index=False)
+#         print(f"Saved combined metrics → {all_csv_path}")
+#     return pd.DataFrame(all_results)
 
 def denoise_folder(
     input_folder: str,
@@ -126,7 +119,8 @@ def denoise_folder(
                     save_path = save_dir / file
                     tiff.imwrite(save_path, (res_norm * 255).astype(np.uint8))
                     print(f"[{method_name}] Saved {save_path}")
-                    
+
+
 def extract_segments_from_json(ref_segments_root: Path, target_folder: Path, out_root: Path):
     """
     Extracts 3D segments from volumes in target_folder using params.json files
@@ -211,30 +205,92 @@ def extract_segments_from_json(ref_segments_root: Path, target_folder: Path, out
     log.append(f"Saved all JSONs in {out_root}")
     return log
 
-def draw_lines_profile(
-        _images: List[np.ndarray],
-        line_coords: Tuple[Tuple[int, int], Tuple[int, int]],
-        _info_methods: List[Tuple[str, str]],
-        save_path: str
-) -> None:
-    try:
-        x_values = np.arange(line_coords[0][0], line_coords[1][0] + 1, dtype=int)
-        _images[1] = np.clip(_images[1].astype(np.float32) / 1.3, 0, 255).astype(np.uint8)
-        _images[3] = np.clip(_images[3].astype(np.float32) / 1.6, 0, 255).astype(np.uint8)
 
-        def process_image(_img, _state, color):
-            profile_values = line_profile(_img, line_coords, _img.shape[0] // 2)
-            return (profile_values, _state, color)
+def compute_diff_maps(gt, noisy, denoised_dict):
+    """
+    Compute difference maps for multiple methods.
+    Returns a dict: {method: (D_gn, D_nd, D_gd)}
+    """
+    results = {}
+    for method, den in denoised_dict.items():
+        D_gn = gt - noisy
+        D_nd = noisy - den
+        D_gd = gt - den
+        results[method] = (D_gn, D_nd, D_gd)
+    return results
 
-        with ThreadPoolExecutor() as executor:
-            lines_data = list(executor.map(process_image, _images, [state for state, _ in _info_methods],
-                                           [color for _, color in _info_methods]))
-        draw_lines(x_values=x_values, y_values_with_details=lines_data,
-                   axis_labels=("Pixel Position", "Intensity Value"), title="Line Profiles", save_path=save_path)
-        print(f"Line profiles saved to {save_path}")
-    except (ValueError, Exception) as e:
-        print(f"Error in draw_lines_profile: {str(e)}")
-        raise
+
+def save_diff_maps(gt, diff_dict, save_folder, slice_axis=0, slice_index=None, cmap="seismic"):
+    """
+    Save difference maps and RGB composites for each method,
+    normalized to the range [-1, 1] across all maps for that method.
+    """
+    os.makedirs(save_folder, exist_ok=True)
+
+    for method, (D_gn, D_nd, D_gd) in diff_dict.items():
+        maps = [D_gn, D_nd, D_gd]
+        names = ["GT-Noisy", "Noisy-Denoised", "GT-Denoised"]
+        if slice_index is None:
+            slice_index = gt.shape[slice_axis] // 2
+
+        def slice_along(arr):
+            if slice_axis == 0:
+                return arr[slice_index, :, :]
+            if slice_axis == 1:
+                return arr[:, slice_index, :]
+            return arr[:, :, slice_index]
+
+        gt_slice = slice_along(gt)
+        diff_slices = [slice_along(m) for m in maps]
+
+        contours = measure.find_contours(gt_slice, 0.5)
+        all_vals = np.concatenate([d.flatten() for d in diff_slices])
+        global_abs_max = np.max(np.abs(all_vals)) + 1e-8
+        diff_norms = [d / global_abs_max for d in diff_slices]
+        vmin, vmax = -1.0, 1.0
+
+        for diff_norm, name in zip(diff_norms, names):
+            fig, ax = plt.subplots()
+            im = ax.imshow(diff_norm, cmap=cmap, vmin=vmin, vmax=vmax)
+            for c in contours:
+                ax.plot(c[:, 1], c[:, 0], color='yellow', linewidth=0.8)
+            ax.axis("off")
+            fig.colorbar(im, ax=ax, shrink=0.6)
+            fig.savefig(os.path.join(save_folder, f"{method}_{name}.png"),
+                        dpi=200, bbox_inches='tight')
+            plt.close(fig)
+            alpha = np.clip(np.abs(diff_norm) * 3.0, 0, 1)
+
+            rgb = np.zeros((*diff_norm.shape, 4))
+            rgb[..., 0] = np.clip(diff_norm, 0, 1)      # positive → red
+            rgb[..., 2] = np.clip(-diff_norm, 0, 1)     # negative → blue
+            rgb[..., 3] = alpha
+            plt.imsave(os.path.join(save_folder, f"{method}_{name}_RGB.png"), rgb)
+
+# def draw_lines_profile(
+#         _images: List[np.ndarray],
+#         line_coords: Tuple[Tuple[int, int], Tuple[int, int]],
+#         _info_methods: List[Tuple[str, str]],
+#         save_path: str
+# ) -> None:
+#     try:
+#         x_values = np.arange(line_coords[0][0], line_coords[1][0] + 1, dtype=int)
+#         _images[1] = np.clip(_images[1].astype(np.float32) / 1.3, 0, 255).astype(np.uint8)
+#         _images[3] = np.clip(_images[3].astype(np.float32) / 1.6, 0, 255).astype(np.uint8)
+
+#         def process_image(_img, _state, color):
+#             profile_values = line_profile(_img, line_coords, _img.shape[0] // 2)
+#             return (profile_values, _state, color)
+
+#         with ThreadPoolExecutor() as executor:
+#             lines_data = list(executor.map(process_image, _images, [state for state, _ in _info_methods],
+#                                            [color for _, color in _info_methods]))
+#         draw_lines(x_values=x_values, y_values_with_details=lines_data,
+#                    axis_labels=("Pixel Position", "Intensity Value"), title="Line Profiles", save_path=save_path)
+#         print(f"Line profiles saved to {save_path}")
+#     except (ValueError, Exception) as e:
+#         print(f"Error in draw_lines_profile: {str(e)}")
+#         raise
 
 # async def analyze_segments(images: List[np.ndarray],
 #                      segment_coords: Tuple[Tuple[int, int], Tuple[int, int]],
